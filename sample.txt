@@ -1,0 +1,1 @@
+Hello this is a test file for real BB84 QKD secure communication.
