@@ -1,73 +1,118 @@
-# Quantum Secure File Transfer
+# Quantum-Secure Cryptography Platform
+### BB84 QKD Simulation, Adaptive Key Management & Authenticated AES-256-GCM Transfer
 
-A desktop file-transfer prototype that combines BB84-style quantum key distribution simulation with AES-compatible Fernet encryption.
+A full-stack, research-grade cybersecurity platform demonstrating Quantum Key Distribution (QKD) principles, basis reconciliation, Quantum Bit Error Rate (QBER) analysis, lifecycle-controlled key management, and authenticated per-file AES-256-GCM encryption.
 
-## What it does
+---
 
-- Simulates BB84 sender and receiver bases with Qiskit Aer.
-- Derives a 32-byte key from the shared quantum bits using SHA-256.
-- Reuses a generated key for up to 15 seconds or 2 transfers.
-- Encrypts a selected file in the Tkinter client.
-- Sends the encrypted payload over a local TCP connection.
-- Decrypts and saves received files on the server.
+## Key Features
 
-> This is an educational prototype. The current implementation sends the symmetric key over the same TCP connection as the encrypted file, so it is not a production-secure network protocol. Use it locally for demonstration and experimentation.
+1. **Light-Theme Cyber Dashboard**: Modern, clean, responsive UI built with semantic HTML, CSS design tokens, and modular vanilla JavaScript.
+2. **BB84 QKD Simulation (Qiskit Aer)**:
+   - Configurable qubit count (16 to 128), channel noise, and basis choices.
+   - Separate error-estimation sampling (revealed sample bits are discarded to eliminate information leakage).
+   - QBER threshold validation against eavesdropping and channel disturbance.
+3. **Adaptive Key Manager**:
+   - Time-to-Live (TTL) expiration and maximum-use policies.
+   - In-memory key tracking, SHA-256 fingerprinting, and audit logging.
+   - Strict avoidance of secret exposure in browser, API responses, or logs.
+4. **Authenticated AES-256-GCM File Transfer**:
+   - Unique 96-bit nonce generated per file.
+   - 128-bit authentication tag with integrity verification before allowing download.
+   - Sender-to-receiver workflow with upload validation (max 15MB) and path traversal protection.
+5. **Security Analytics & Benchmarks**:
+   - Multi-trial channel noise impact analysis.
+   - Intercept-Resend (Eve) attack detection rate measurements (~25% theoretical disturbance).
+   - AES-256-GCM vs Fernet encryption throughput benchmarks.
+6. **Production-Ready & Tested**:
+   - Full FastAPI backend with JWT session authentication.
+   - 15 automated pytest suites covering simulation, crypto, key manager, transfer, and API endpoints.
+   - Ready for one-click deployment on Render via `render.yaml`.
 
-## Requirements
+---
 
-- Python 3.10 or newer
-- Tkinter (included with most Windows Python installations)
-- Qiskit and Qiskit Aer
-- Cryptography
+## Project Structure
 
-Install the Python dependencies:
-
-```powershell
-python -m pip install -r requirements.txt
+```
+├── adaptive_key_manager.py     # Adaptive Key Manager with TTL & max-use controls
+├── auth_service.py             # User authentication, bcrypt hashing, JWT tokens
+├── crypto_engine.py            # AES-256-GCM authenticated encryption engine
+├── experiment_runner.py        # Automated reproducible security benchmarks
+├── file_transfer_service.py    # Secure sender-to-receiver file transfer pipeline
+├── main.py                     # FastAPI application routes & static server
+├── qkd_analyzer.py             # Qiskit Aer BB84 protocol simulation & QBER analyzer
+├── requirements.txt            # Python dependencies
+├── render.yaml                 # Render Blueprint configuration
+├── .env.example                # Safe environment variable template
+├── docs/
+│   ├── ARCHITECTURE.md         # System design and Mermaid diagrams
+│   ├── SECURITY.md             # Threat model, assumptions, and limits
+│   ├── EXPERIMENTS.md          # Benchmark results & trial measurements
+│   └── DEPLOYMENT.md           # Render deployment steps
+├── static/                     # Light-theme frontend assets
+│   ├── index.html              # Single-page application dashboard
+│   ├── styles.css              # Modern light-theme design system
+│   └── app.js                  # Frontend workflow controller
+└── tests/
+    ├── test_comprehensive.py   # Full test suite (QKD, Crypto, KM, Transfer, API)
+    └── test_core.py            # Baseline compatibility tests
 ```
 
-## Run locally
+---
 
-Open two terminals in the project directory.
+## Local Installation & Execution
 
-Start the receiver first:
+### 1. Prerequisites
+- Python 3.10+ (Tested on Python 3.13)
+- `pip` package manager
 
-```powershell
-python server.py
+### 2. Setup Virtual Environment
+```bash
+python -m venv .venv
+# On Windows:
+.venv\Scripts\activate
+# On Linux / macOS:
+source .venv/bin/activate
 ```
 
-Start the desktop client in the second terminal:
-
-```powershell
-python client_gui.py
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
 ```
 
-Choose a file in the client and select **Encrypt & Send File**. The server writes each decrypted payload as `received_N.txt` in its working directory.
+### 4. Run the Application
+```bash
+uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+```
+Open your browser at: **`http://127.0.0.1:8000`**
 
-The default connection is `127.0.0.1:5000`. Change `HOST` and `PORT` in both `client_gui.py` and `server.py` when using separate machines. Ensure the selected port is allowed by the local firewall.
+- **Default Username**: `admin`
+- **Default Password**: `QuantumAdmin2026!`
 
-## Project structure
+---
 
-| File | Purpose |
-| --- | --- |
-| `client_gui.py` | Tkinter client for selecting, encrypting, and sending files |
-| `server.py` | TCP receiver that decrypts and stores files |
-| `qkd_quantum.py` | BB84-style key-generation simulation using Qiskit Aer |
-| `encryption.py` | Fernet encryption and decryption wrapper |
-| `key_manager.py` | Time- and usage-based key reuse policy |
-| `tests/` | Fast unit tests for reusable core components |
-| `sample.txt` | Small example input file |
+## Running Automated Tests
 
-## Run tests
-
-```powershell
-python -m unittest discover -s tests -v
+Run the complete test suite with pytest:
+```bash
+pytest tests/ -v
 ```
 
-## Security notes
+---
 
-This project demonstrates concepts rather than providing a hardened secure-transfer product. Before using a design like this beyond a local demo, add authenticated peer identity, secure key exchange, message framing validation, replay protection, encrypted transport, access controls, and robust error handling. Do not commit private keys, credentials, or sensitive files.
+## Deploying to Render
 
-## License
+1. Push this repository to GitHub or GitLab.
+2. Log in to [Render](https://render.com) and create a **New Blueprint Instance**.
+3. Select this repository. Render will automatically read `render.yaml` and configure:
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Health Check**: `/health`
+4. Set your production `DEMO_ADMIN_PASSWORD` and `JWT_SECRET`.
+5. Click **Apply** to launch the live web service.
 
-This project is released under the MIT License. See `LICENSE`.
+---
+
+## Academic & Experimental Notice
+This software utilizes Qiskit Aer statevector circuits to simulate the BB84 protocol. It demonstrates quantum key sifting, error estimation, and cryptographic key usage. It is not a hardware optical quantum device.

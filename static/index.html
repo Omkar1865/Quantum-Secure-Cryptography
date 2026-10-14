@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum-Secure Cryptography Platform | QKD & AES-256-GCM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Auth View (Shown when unauthenticated) -->
+  <div id="authView" class="auth-wrapper" style="display: none;">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div class="brand-icon" style="margin: 0 auto 12px; width: 48px; height: 48px; font-size: 22px;">⚛</div>
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--text-main);">Quantum Cryptography Platform</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Sign in to access QKD Lab & Secure Transfer</p>
+      </div>
+
+      <div id="authError" class="alert alert-warning" style="display: none; padding: 10px 14px; font-size: 12px;"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="loginUsername" class="form-control" value="admin" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-control" value="QuantumAdmin2026!" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+          Authenticate
+        </button>
+      </form>
+      <div style="margin-top: 20px; text-align: center; font-size: 12px; color: var(--text-muted);">
+        Demo Credentials pre-filled: <code>admin</code> / <code>QuantumAdmin2026!</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Layout (Shown when authenticated) -->
+  <div id="appView" class="app-container" style="display: none;">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">⚛</div>
+        <div>
+          <div class="brand-title">Q-Secure Lab</div>
+          <div class="brand-subtitle">BB84 + AES-256-GCM</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" onclick="switchTab('transfer')" id="nav-transfer">
+          <span class="nav-icon">🔒</span>
+          <span>File Transfer</span>
+        </a>
+        <a class="nav-item" onclick="switchTab('qkd')" id="nav-qkd">
+          <span class="nav-icon">⚛</span>
+          <span>QKD Lab</span>
+        </a>
+        <a class="nav-item" onclick="switchTab('keys')" id="nav-keys">
+          <span class="nav-icon">🔑</span>
+          <span>Key Manager</span>
+        </a>
+        <a class="nav-item" onclick="switchTab('analytics')" id="nav-analytics">
+          <span class="nav-icon">📈</span>
+          <span>Security Analytics</span>
+        </a>
+        <a class="nav-item" onclick="switchTab('docs')" id="nav-docs">
+          <span class="nav-icon">📖</span>
+          <span>Documentation</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <div>
+              <div class="user-name" id="userNameDisplay">Admin</div>
+              <div class="user-role" id="userRoleDisplay">Administrator</div>
+            </div>
+          </div>
+          <button class="btn-logout" onclick="handleLogout()" title="Log out">
+            🚪
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-wrapper">
+      <header class="top-navbar">
+        <h1 class="page-title" id="pageTitle">Security Overview Dashboard</h1>
+        <div class="top-status">
+          <div class="status-badge status-online">
+            <span class="pulse-dot"></span>
+            Qiskit Aer Simulator Active
+          </div>
+          <button class="btn btn-secondary" onclick="refreshCurrentTab()" style="padding: 6px 12px; font-size: 12px;">
+            🔄 Refresh
+          </button>
+        </div>
+      </header>
+
+      <main class="content-body">
+
+        <!-- ================= TAB: DASHBOARD ================= -->
+        <section id="tab-dashboard" class="tab-pane">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Transfers</div>
+              <div class="stat-value" id="dashTotalTransfers">0</div>
+              <div class="stat-subtext">Sender to Receiver</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Transfer Success Rate</div>
+              <div class="stat-value" id="dashSuccessRate">100%</div>
+              <div class="stat-subtext" id="dashSuccessCounts">0 verified / 0 failed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">QKD Protocol Rounds</div>
+              <div class="stat-value" id="dashTotalQkd">0</div>
+              <div class="stat-subtext" id="dashQkdRate">0% acceptance</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Active Usable Keys</div>
+              <div class="stat-value" id="dashActiveKeys">0</div>
+              <div class="stat-subtext">Under TTL & Use Limit</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Recent File Transfers</h3>
+                  <div class="card-subtitle">Authenticated AES-256-GCM payloads</div>
+                </div>
+                <button class="btn btn-secondary" onclick="switchTab('transfer')" style="font-size: 12px;">New Transfer</button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Filename</th>
+                      <th>Status</th>
+                      <th>Key ID</th>
+                      <th>Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashTransfersTable">
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No transfers recorded yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Key Manager Audit Log</h3>
+                  <div class="card-subtitle">Real-time lifecycle & policy enforcement events</div>
+                </div>
+                <button class="btn btn-secondary" onclick="switchTab('keys')" style="font-size: 12px;">View Policy</button>
+              </div>
+              <div style="max-height: 260px; overflow-y: auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Action</th>
+                      <th>Key ID</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashAuditTable">
+                    <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No key events yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: SECURE TRANSFER ================= -->
+        <section id="tab-transfer" class="tab-pane" style="display: none;">
+          <div class="grid-2">
+            
+            <!-- Upload & Transfer Card -->
+            <div class="card">
+              <h3 class="card-title">Initiate Quantum-Encrypted Transfer</h3>
+              <div class="card-subtitle" style="margin-bottom: 20px;">
+                Encrypts payload locally using AES-256-GCM with quantum key material and sends to receiver.
+              </div>
+
+              <form id="transferForm" onsubmit="handleTransferSubmit(event)">
+                <div class="dropzone" id="fileDropzone" onclick="document.getElementById('fileInput').click()">
+                  <div class="dropzone-icon">📁</div>
+                  <div style="font-weight: 600; margin-bottom: 4px;" id="dropzoneText">Click or Drag & Drop File Here</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">Maximum file size: 15MB</div>
+                  <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelected(this)">
+                </div>
+
+                <div style="margin-top: 16px;" class="form-group">
+                  <label class="form-label">Receiver Identity</label>
+                  <input type="text" id="receiverName" class="form-control" value="Bob_QuantumNode" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Quantum Key Strategy</label>
+                  <select id="keySelectMode" class="form-control" onchange="toggleKeySelectMode(this.value)">
+                    <option value="auto">Adaptive: Reuse Valid Key or Run BB84 Simulation</option>
+                    <option value="manual">Select Existing Active Key ID</option>
+                  </select>
+                </div>
+
+                <div class="form-group" id="manualKeyGroup" style="display: none;">
+                  <label class="form-label">Active Key</label>
+                  <select id="transferKeyId" class="form-control">
+                    <option value="">-- No active keys available --</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnTransferSubmit" style="width: 100%;">
+                  🚀 Encrypt, Transfer & Verify
+                </button>
+              </form>
+            </div>
+
+            <!-- Transfer Status & Logs -->
+            <div class="card">
+              <h3 class="card-title">Transfer Pipeline Status</h3>
+              <div class="card-subtitle" style="margin-bottom: 16px;">
+                End-to-end cryptographic and verification stage indicators
+              </div>
+
+              <div id="transferProgressArea" style="display: none;">
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                  <div class="alert alert-info" id="transferStepStatus">
+                    Processing transfer...
+                  </div>
+                  <div style="font-size: 13px; line-height: 1.8;">
+                    <div><strong>Transfer ID:</strong> <span id="resTransferId">-</span></div>
+                    <div><strong>Key Utilized:</strong> <span id="resKeyId">-</span></div>
+                    <div><strong>Encryption Duration:</strong> <span id="resEncTime">-</span> ms</div>
+                    <div><strong>Decryption Duration:</strong> <span id="resDecTime">-</span> ms</div>
+                    <div><strong>Integrity Verified (SHA-256):</strong> <span id="resIntegrity">-</span></div>
+                  </div>
+                </div>
+
+                <div id="downloadActionArea" style="display: none;">
+                  <a id="btnDownloadFile" href="#" class="btn btn-primary" download style="text-decoration: none;">
+                    📥 Download Received File
+                  </a>
+                </div>
+              </div>
+
+              <div id="transferEmptyPrompt" style="color: var(--text-muted); text-align: center; padding: 40px 0;">
+                Select a file and click "Encrypt, Transfer & Verify" to see live cryptographic stages.
+              </div>
+            </div>
+          </div>
+
+          <!-- History Table -->
+          <div class="card">
+            <h3 class="card-title">Completed Transfers</h3>
+            <div class="card-subtitle" style="margin-bottom: 16px;">Verified payloads available for secure receiver download</div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transfer ID</th>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th>Key ID</th>
+                    <th>Sender &rarr; Receiver</th>
+                    <th>Integrity Hash</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="transferHistoryTable">
+                  <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No transfers completed yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: QKD LAB ================= -->
+        <section id="tab-qkd" class="tab-pane" style="display: none;">
+          <div class="grid-2">
+            
+            <!-- Controls Card -->
+            <div class="card">
+              <h3 class="card-title">BB84 Simulation Controller</h3>
+              <div class="card-subtitle" style="margin-bottom: 20px;">
+                Configure quantum states, channel disturbance, and eavesdropping.
+              </div>
+
+              <form onsubmit="handleRunQKD(event)">
+                <div class="form-group">
+                  <label class="form-label">Qubits Count (16 - 128)</label>
+                  <input type="number" id="qkdQubits" class="form-control" value="48" min="16" max="128" step="8">
+                  <small style="color: var(--text-muted);">Higher qubit count increases raw sifted secret entropy.</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Channel Noise Level (0.00 - 0.50)</label>
+                  <input type="number" id="qkdNoise" class="form-control" value="0.00" min="0" max="0.5" step="0.02">
+                  <small style="color: var(--text-muted);">Simulates depolarizing/bit-flip noise in the optical channel.</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">QBER Safety Threshold (default 0.11 = 11%)</label>
+                  <input type="number" id="qkdThreshold" class="form-control" value="0.11" min="0.01" max="0.30" step="0.01">
+                  <small style="color: var(--text-muted);">Theoretical BB84 threshold against general attacks.</small>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                  <input type="checkbox" id="qkdEve" style="width: 18px; height: 18px;">
+                  <label for="qkdEve" style="font-weight: 600; cursor: pointer;">
+                    Simulate Eve Intercept-Resend Attack
+                  </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnRunQKD" style="width: 100%; margin-top: 16px;">
+                  ⚛ Execute BB84 Simulation Round
+                </button>
+              </form>
+            </div>
+
+            <!-- Live Round Result Display -->
+            <div class="card">
+              <h3 class="card-title">Quality Analysis & Protocol Decision</h3>
+              <div class="card-subtitle" style="margin-bottom: 16px;">
+                Basis reconciliation, error estimation, and entropy validation.
+              </div>
+
+              <div id="qkdResultArea" style="display: none;">
+                <div id="qkdDecisionBadge" class="alert alert-info">Decision pending...</div>
+                
+                <div style="font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
+                  <div><strong>Measured QBER:</strong> <span id="resQber" style="font-weight: 700;">-</span></div>
+                  <div><strong>Sifted Bits Count:</strong> <span id="resSiftedCount">-</span></div>
+                  <div><strong>Sample Tested Bits (Discarded):</strong> <span id="resSampleTested">-</span></div>
+                  <div><strong>Sample Errors Found:</strong> <span id="resSampleErrors">-</span></div>
+                  <div><strong>Retained Secret Bits:</strong> <span id="resRetainedBits">-</span></div>
+                  <div><strong>Key Fingerprint (SHA-256):</strong> <code id="resKeyFp">-</code></div>
+                </div>
+
+                <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Basis Match & Sifting Matrix (First 24 Qubits)</h4>
+                <div class="bit-matrix" id="qkdBitMatrix"></div>
+              </div>
+
+              <div id="qkdEmptyArea" style="color: var(--text-muted); text-align: center; padding: 40px 0;">
+                Click "Execute BB84 Simulation Round" to run Qiskit Aer simulation.
+              </div>
+            </div>
+          </div>
+
+          <!-- Round History -->
+          <div class="card">
+            <h3 class="card-title">QKD Protocol Rounds History</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Round ID</th>
+                    <th>Qubits</th>
+                    <th>Noise</th>
+                    <th>Eve</th>
+                    <th>QBER</th>
+                    <th>Decision</th>
+                    <th>Reason</th>
+                  </tr>
+                </thead>
+                <tbody id="qkdHistoryTable">
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No rounds run yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: KEY MANAGER ================= -->
+        <section id="tab-keys" class="tab-pane" style="display: none;">
+          <div class="grid-2">
+            
+            <!-- Policy Controls -->
+            <div class="card">
+              <h3 class="card-title">Key Lifecycle Policies</h3>
+              <div class="card-subtitle" style="margin-bottom: 20px;">
+                Configure automatic expiration (TTL) and maximum transfer usages.
+              </div>
+              <form onsubmit="handleUpdatePolicy(event)">
+                <div class="form-group">
+                  <label class="form-label">Default Expiration Time (Seconds)</label>
+                  <input type="number" id="policyTtl" class="form-control" value="60" min="5" max="3600">
+                  <small style="color: var(--text-muted);">Keys older than this TTL transition to EXPIRED state.</small>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Maximum Permitted Uses</label>
+                  <input type="number" id="policyMaxUses" class="form-control" value="2" min="1" max="50">
+                  <small style="color: var(--text-muted);">Limits key reuse to mitigate cryptanalytic exposure.</small>
+                </div>
+                <button type="submit" class="btn btn-secondary">Save Policy Settings</button>
+              </form>
+            </div>
+
+            <!-- Key Security Rules -->
+            <div class="card">
+              <h3 class="card-title">Cryptographic Safety Guarantees</h3>
+              <div class="card-subtitle" style="margin-bottom: 16px;">Key Manager policy enforcement rules</div>
+              <ul style="font-size: 13px; line-height: 1.8; padding-left: 20px; color: var(--text-main);">
+                <li><strong>No Plain Secret Exposure:</strong> Secret key bytes are never rendered in HTML, logged to console, or passed over unauthenticated endpoints.</li>
+                <li><strong>Per-File Nonce Uniqueness:</strong> AES-256-GCM generates a cryptographically distinct 96-bit nonce for each individual file transfer.</li>
+                <li><strong>State Invalidation:</strong> Once a key reaches its maximum usage limit or TTL expires, it cannot be used for new encryptions.</li>
+                <li><strong>Manual Revocation:</strong> Administrators can immediately revoke compromised or obsolete keys.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Keys Table -->
+          <div class="card">
+            <h3 class="card-title">Active & Archived Quantum Key Material</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Key Identifier</th>
+                    <th>Fingerprint</th>
+                    <th>Status</th>
+                    <th>Uses (Count / Max)</th>
+                    <th>Time Remaining</th>
+                    <th>QBER at Generation</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="keysTableBody">
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No keys generated yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: SECURITY ANALYTICS ================= -->
+        <section id="tab-analytics" class="tab-pane" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Automated Security Benchmarks</h3>
+                <div class="card-subtitle">Empirical validation of channel noise, eavesdropping detection, and cipher performance</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+              <button class="btn btn-secondary" onclick="runNoiseBenchmark()" id="btnNoiseExp">
+                📊 Run Channel Noise Benchmark
+              </button>
+              <button class="btn btn-secondary" onclick="runEavesdroppingBenchmark()" id="btnEveExp">
+                🕵 Run Eavesdropping Detection Test
+              </button>
+              <button class="btn btn-secondary" onclick="runCryptoBenchmark()" id="btnCryptoExp">
+                ⚡ Run AES-256-GCM vs Fernet Throughput
+              </button>
+            </div>
+
+            <div id="analyticsOutput" style="font-size: 13px; background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 16px;">
+              Select an experiment above to run empirical multi-trial benchmarks.
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: DOCUMENTATION ================= -->
+        <section id="tab-docs" class="tab-pane" style="display: none;">
+          <div class="card">
+            <h2 class="card-title" style="font-size: 18px; margin-bottom: 12px;">Architecture & Theoretical Foundations</h2>
+            <div class="card-subtitle" style="margin-bottom: 24px;">Quantum Key Distribution, Cryptographic Bounds, and Simulation Assumptions</div>
+
+            <div class="alert alert-info">
+              <strong>Academic & Experimental Disclaimer:</strong> This platform performs a software simulation of the BB84 protocol using Qiskit Aer statevector circuits. It simulates quantum states, basis reconciliation, and channel disturbances. It does not replace physical fiber-optic photon detectors or hardware quantum random number generators.
+            </div>
+
+            <div style="font-size: 14px; line-height: 1.8; color: var(--text-main);">
+              <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 8px;">1. BB84 Quantum Key Distribution</h3>
+              <p>Alice encodes random bits into single photon polarization states chosen from two conjugate bases: rectilinear (+) with {|0>, |1>} and diagonal (x) with {|+>, |->}. Bob independently measures in randomly chosen bases. Because conjugate bases cannot be simultaneously measured without quantum disturbance (Heisenberg uncertainty and No-Cloning Theorem), an eavesdropper (Eve) who intercepts and resends qubits introduces a characteristic ~25% error rate on matching bases.</p>
+
+              <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 8px;">2. QBER Quality Analysis</h3>
+              <p>Alice and Bob publicly compare a sample fraction of their sifted bits to estimate the Quantum Bit Error Rate (QBER). The bits revealed during error estimation are discarded. If QBER &le; 11% (the theoretical threshold against general coherent attacks), the remaining secret bits undergo privacy amplification and key derivation.</p>
+
+              <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 8px;">3. Authenticated AES-256-GCM Encryption</h3>
+              <p>Files are encrypted using AES-256 in Galois/Counter Mode (GCM). AES-GCM provides both confidentiality and data authenticity with a 128-bit authentication tag, strictly preventing undetected tampering or replay attacks. Each file transfer generates an independent 96-bit cryptographic nonce.</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

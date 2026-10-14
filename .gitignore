@@ -19,6 +19,8 @@ ENV/
 
 # Generated transfer output
 received_*.txt
+storage/
+*.log
 
 # OS and editor files
 .DS_Store
