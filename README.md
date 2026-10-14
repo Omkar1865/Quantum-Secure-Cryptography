@@ -100,19 +100,6 @@ pytest tests/ -v
 
 ---
 
-## Deploying to Render
-
-1. Push this repository to GitHub or GitLab.
-2. Log in to [Render](https://render.com) and create a **New Blueprint Instance**.
-3. Select this repository. Render will automatically read `render.yaml` and configure:
-   - **Runtime**: Python 3
-   - **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-   - **Health Check**: `/health`
-4. Set your production `DEMO_ADMIN_PASSWORD` and `JWT_SECRET`.
-5. Click **Apply** to launch the live web service.
-
----
 
 ## Academic & Experimental Notice
 This software utilizes Qiskit Aer statevector circuits to simulate the BB84 protocol. It demonstrates quantum key sifting, error estimation, and cryptographic key usage. It is not a hardware optical quantum device.
